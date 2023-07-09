@@ -1,0 +1,16 @@
+{
+    "app": {
+        "port": 4000
+    },
+    "jwt": {
+        "secret": "sfsdfSFSF@#4wedf3SDF#WDSFSDG#sa12YRJ%^&#$$UFQWE#@%G@%^%",
+        "expire": 3600
+    },
+    "mongo": {
+        "uri": "mongodb://localhost:27018/"
+    }
+}
+
+
+
+
