@@ -18,7 +18,7 @@ export class UserService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(userData: UserCredentialsDto): Promise<Omit<User, 'password'>> {
+  async signup(userData: UserCredentialsDto): Promise<{ accessToken: string }> {
     let user: User;
     user = await this.userRepository.findOne(
       {
@@ -33,8 +33,10 @@ export class UserService {
       ...userData,
       password: await bcrypt.hash(userData.password, 10),
     });
-    delete user.password;
-    return user;
+    const payload: Payload = { username: user.username };
+    return {
+      accessToken: await this.jwtService.signAsync(payload),
+    };
   }
 
   async signin({

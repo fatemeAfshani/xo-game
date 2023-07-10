@@ -9,7 +9,7 @@ export class UserController {
   @Post('/signup')
   async signup(
     @Body() createUserData: UserCredentialsDto,
-  ): Promise<Omit<User, 'password'>> {
+  ): Promise<{ accessToken: string }> {
     return this.userService.signup(createUserData);
   }
 
