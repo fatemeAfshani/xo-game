@@ -1,21 +1,31 @@
-import { BrowserRouter, HashRouter, Route, Routes } from "react-router-dom"
-// import Footer from "./components/Footer.js"
-import Footer from "./components/Footer.js"
-import Navbar from "./components/Navbar.js"
-import SignIn from "./views/SignIn.js"
-import Signup from "./views/Signup.js"
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import AuthProvider from './components/context/AuthContext.js';
+import Footer from './components/Footer.js';
+import Header from './components/Header.js';
+import RequireAuth from './components/RequireAuth.js';
+import Home from './views/Home.js';
+import SignIn from './views/SignIn.js';
+import Signup from './views/Signup.js';
 
 function App() {
-
   return (
-<>
-    <Navbar />
-
+    <>
+      {/* <Navbar />
+       */}
+      <AuthProvider>
+        <Header />
         <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <Home />{' '}
+                </RequireAuth>
+              }
+            />
 
-
-  <Routes>
-            {/* <Route path="/home" element={<Home />} />
+            {/*
             <Route
             path="about"
               element={
@@ -39,15 +49,15 @@ function App() {
                   </RequireAuth>
                 }
               /> */}
-            <Route path="/" element={<SignIn />} />
+            <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<Signup />} />
             {/* <Route path="*" element={<NoMatch />} /> */}
           </Routes>
         </BrowserRouter>
-              <Footer/>
-              </>
-
-              )
+        <Footer />
+      </AuthProvider>
+    </>
+  );
 }
 
-export default App
+export default App;
