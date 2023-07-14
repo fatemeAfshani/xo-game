@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AuthProvider from './components/context/AuthContext.js';
 import Footer from './components/Footer.js';
@@ -6,6 +7,9 @@ import RequireAuth from './components/RequireAuth.js';
 import Home from './views/Home.js';
 import SignIn from './views/SignIn.js';
 import Signup from './views/Signup.js';
+
+const LazyPlayGround = React.lazy(() => import('./views/PlayGround.js'));
+const LazyWaiting = React.lazy(() => import('./views/WaitingRoom.js'));
 
 function App() {
   return (
@@ -25,15 +29,28 @@ function App() {
               }
             />
 
-            {/*
             <Route
-            path="about"
+              path="playground"
               element={
-                <React.Suspense fallback="Loading ...">
-                  <LazyAbout />
-                </React.Suspense>
+                <RequireAuth>
+                  <React.Suspense fallback="Loading ...">
+                    <LazyPlayGround />
+                  </React.Suspense>
+                </RequireAuth>
               }
             />
+
+            <Route
+              path="waiting"
+              element={
+                <RequireAuth>
+                  <React.Suspense fallback="Loading ...">
+                    <LazyWaiting />
+                  </React.Suspense>
+                </RequireAuth>
+              }
+            />
+            {/*
             <Route path="order-summery" element={<OrderSummery />} />
             <Route path="products" element={<Product />}>
             <Route index element={<FeatureProducts />} />
@@ -49,8 +66,8 @@ function App() {
                   </RequireAuth>
                 }
               /> */}
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="signin" element={<SignIn />} />
+            <Route path="signup" element={<Signup />} />
             {/* <Route path="*" element={<NoMatch />} /> */}
           </Routes>
         </BrowserRouter>
