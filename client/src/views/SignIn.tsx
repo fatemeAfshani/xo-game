@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/context/AuthContext.js';
+import { getErrorMessage } from '../utils.js';
 
 type SignInInput = {
   username: string;
@@ -16,10 +17,10 @@ export default function SignIn() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { userToken, login } = useAuth();
-  console.log('#### userToken', userToken);
+  const { user, login } = useAuth();
+  console.log('#### userToken', user?.token);
   const redirectPath = location?.state?.path || '/';
-  if (userToken) navigate(redirectPath);
+  if (user?.token) navigate(redirectPath);
 
   const clickHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
@@ -31,14 +32,11 @@ export default function SignIn() {
         data: userData,
         url: `${import.meta.env.VITE_URL as string}/users/signin`,
       });
-      login(response.data.accessToken);
+      console.log('##### response.data', response.data);
+      login(response.data);
       navigate(redirectPath, { replace: true });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message
-        ? Array.isArray(error.response?.data?.message)
-          ? error.response?.data?.message?.[0]
-          : error.response?.data?.message
-        : 'something went wrong';
+      const errorMessage = getErrorMessage(error);
 
       console.log('#### error', errorMessage);
       setSignInError(errorMessage);
@@ -46,7 +44,7 @@ export default function SignIn() {
   };
   return (
     <div className="login template d-flex justify-content-center align-items-center vh-100 bg-white">
-      <div className=" rounded p-5 bg-blue  ">
+      <div className=" rounded p-5 bg-blue">
         <form onSubmit={clickHandler}>
           <h3 className="text-center">Sign In</h3>
           {signInError && (
@@ -87,7 +85,7 @@ export default function SignIn() {
           </div>
         </form>
         <p className="text-right">
-          Don't have an account ? <Link to="/signup"> Click Here</Link>
+          Do not have an account ? <Link to="/signup"> Click Here</Link>
         </p>
       </div>
     </div>

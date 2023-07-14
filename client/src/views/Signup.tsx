@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/context/AuthContext.js';
+import { getErrorMessage } from '../utils.js';
 
 type RegisterInput = {
   username: string;
@@ -18,10 +19,10 @@ export default function Signup() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { userToken, login } = useAuth();
-  console.log('#### userToken', userToken);
+  const { user, login } = useAuth();
+  console.log('#### userToken', user?.token);
   const redirectPath = location?.state?.path || '/';
-  if (userToken) navigate(redirectPath);
+  if (user?.token) navigate(redirectPath);
 
   const clickHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
@@ -33,14 +34,10 @@ export default function Signup() {
         data: userData,
         url: `${import.meta.env.VITE_URL as string}/users/signup`,
       });
-      login(response.data.accessToken);
+      login(response.data);
       navigate(redirectPath, { replace: true });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message
-        ? Array.isArray(error.response?.data?.message)
-          ? error.response?.data?.message?.[0]
-          : error.response?.data?.message
-        : 'something went wrong';
+      const errorMessage = getErrorMessage(error);
 
       console.log('#### error', errorMessage);
       setRegisterError(errorMessage);
