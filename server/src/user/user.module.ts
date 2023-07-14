@@ -24,7 +24,7 @@ const { expire, secret } = config.get('jwt');
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [UserController],
-  providers: [UserService, UserRepository, JwtStrategy],
-  exports: [UserRepository, PassportModule, JwtStrategy],
+  providers: [UserService, UserRepository, JwtStrategy, User],
+  exports: [UserRepository, PassportModule, JwtStrategy, User],
 })
 export class UserModule {}
