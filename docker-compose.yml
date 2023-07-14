@@ -15,23 +15,32 @@ services:
   #   networks:
   #     - xo-game
 
-
   db:
     image: mongo
     volumes:
-    - mongodbData:/data/db
+      - mongodbData:/data/db
     command: mongod --port 27018
     ports:
-    - '27018:27018'
+      - '27018:27018'
     networks:
       - xo-game
 
+  redis:
+    image: redis
+    ports:
+      - 6380:6380
+    command: --port 6380
+    volumes:
+      - redisdata:/data
+    networks:
+      - xo-game
 
 volumes:
   mongodbData:
     driver: local
 
-
+  redisdata:
+    driver: local
 networks:
   xo-game:
     driver: bridge
