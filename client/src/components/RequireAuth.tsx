@@ -8,10 +8,10 @@ type RequireAuthProps = {
 };
 
 export default function RequireAuth({ children }: RequireAuthProps) {
-  const { userToken } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
-  console.log('#### userToken', userToken);
-  if (!userToken) return <Navigate to="/signin" state={{ path: location.pathname }} />;
+  console.log('#### userToken', user?.token);
+  if (!user?.token) return <Navigate to="/signin" state={{ path: location.pathname }} />;
   return <>{children}</>;
 }
 
