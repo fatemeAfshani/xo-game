@@ -4,7 +4,7 @@ export default function Header() {
   const { logout } = useAuth();
 
   return (
-    <div className="bg-blue py-3 fixed-top">
+    <div className="bg-blue py-3">
       <div className="container  d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start ">
         <a href="/" className="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
           <h3>XO GAME</h3>
@@ -16,19 +16,10 @@ export default function Header() {
               Overview
             </a>
           </li>
-          <li>
-            <a href="#" className="nav-link px-2 link-dark">
-              Inventory
-            </a>
-          </li>
+
           <li>
             <a href="#" className="nav-link px-2 link-dark">
               Customers
-            </a>
-          </li>
-          <li>
-            <a href="#" className="nav-link px-2 link-dark">
-              Products
             </a>
           </li>
         </ul>
@@ -53,7 +44,7 @@ export default function Header() {
               <hr className="dropdown-divider"></hr>
             </li>
             <li>
-              <button className="dropdown-item" onClick={logout}>
+              <button className="dropdown-item" onClick={() => logout()}>
                 Sign out
               </button>
             </li>
