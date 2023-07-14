@@ -1,20 +1,123 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Button, Modal } from 'react-bootstrap';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/context/AuthContext.js';
 import '../css/playground.css';
-import { getPlaygroundSocketClient } from '../socket.js';
-import { GameData } from '../types.js';
+import { getSocket } from '../socket.js';
+import { GameData, Move } from '../types.js';
+
+const socket = getSocket();
 
 export default function PlayGround() {
   const [error, setError] = useState('');
+  const [gameStatus, setGameStatus] = useState('');
+  const [gameDecision, setGameDecision] = useState('');
+  const [showModal, setShowModal] = useState(false);
   const [gameData, setGameData] = useState<GameData | null>();
   const [myTurn, setMyTurn] = useState<'X' | 'O' | null>();
+  const [turn, setTurn] = useState<'X' | 'O' | null>();
+  const [cells, setCells] = useState<Move[]>(Array(9).fill(''));
+  const [cellClassNames, setCellClassNames] = useState<string[]>(Array(9).fill('cell'));
+  const [boardClassName, setBoardClassName] = useState('board mx-auto');
+
+  console.log('#### cellClassNamse', cellClassNames);
+  const x_Class = 'X';
+  // const o_Class = 'O';
+
   const location = useLocation();
+  const navigate = useNavigate();
   const gameId = location.state.gameId;
   const { user } = useAuth();
+
   console.log('### playground screen', user);
+
+  useEffect(() => {
+    socket.emit('join', {
+      gameId,
+      status: 'playground',
+    });
+  }, [gameId]);
+
+  // game logic
+
+  const setHover = useCallback(() => {
+    setBoardClassName('board mx-auto');
+
+    if (turn == myTurn) {
+      setBoardClassName(`board mx-auto ${myTurn}`);
+    }
+  }, [myTurn, turn]);
+
+  const continueGame = useCallback(() => {
+    const newClassNames = cells.map((cell) => {
+      if (cell === 0) {
+        return 'cell';
+      } else if (cell === x_Class) {
+        return 'cell X';
+      } else {
+        return 'cell O';
+      }
+    });
+
+    console.log('#### cell class name in continue game', newClassNames);
+    setCellClassNames(newClassNames);
+
+    setCellClassNames(newClassNames);
+    setHover();
+  }, [cells, setHover]);
+
+  const startGame = useCallback(() => {
+    setCellClassNames(Array(9).fill('cell'));
+
+    setHover();
+  }, [setHover]);
+
+  useEffect(() => {
+    const newGame = cells?.every((move) => {
+      return move == 0;
+    });
+    console.log('##### new game?', newGame);
+    if (newGame) {
+      startGame();
+    } else {
+      continueGame();
+    }
+  }, [cells, continueGame, startGame]);
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (gameDecision) setGameDecision('');
+    if (gameStatus) setGameStatus('');
+    console.log('#### e.target', e.target);
+    const cell = e.target as Element;
+    const cellIndex = cell.getAttribute('data-index') as unknown as number;
+    console.log('### cellIndex', cellIndex, cells[cellIndex]);
+    if (cells[cellIndex] !== 'X' && cells[cellIndex] !== 'O' && turn == myTurn) {
+      console.log('#### here');
+      cellClassNames[cellIndex] = `cell ${myTurn}`;
+      console.log('#### updatd cellClass name', cellClassNames);
+      setCellClassNames(cellClassNames);
+      const data = {
+        turn,
+        index: cellIndex,
+        gameId,
+      };
+
+      socket.emit('userMove', data);
+      setHover();
+    }
+  };
+
+  const continueHandler = () => {
+    socket.emit('continue', { gameId });
+    setShowModal(false);
+  };
+
+  const finishHandler = () => {
+    socket.emit('finish', { gameId });
+    setShowModal(false);
+  };
+
   // socket logic
-  const socket = getPlaygroundSocketClient(gameId);
 
   socket.on('disconnect', () => {
     setError('unable to connect to server');
@@ -30,16 +133,51 @@ export default function PlayGround() {
     setGameData(game);
   });
 
-  // game logic
-  // const [cells, setCells] = useState(Array(9).fill(''));
+  socket.on('gameMoves', (moves: Move[]) => {
+    console.log('#### moves', moves);
+    setCells(moves);
+  });
 
-  const handleClick = (index: number) => {
-    console.log('#### index', index);
+  socket.on('gameTurn', (turn: 'X' | 'O') => {
+    console.log('#### turn', turn);
+    setTurn(turn);
+  });
+
+  socket.on('changesForUser', ({ moves, newTurn }: { moves: Move[]; newTurn: 'X' | 'O' }) => {
+    setTurn(newTurn);
+    setCells(moves);
+    continueGame();
+  });
+
+  socket.on('endRound', ({ status }: { game: GameData; status: string }) => {
+    setGameStatus(status);
+
+    setShowModal(true);
+  });
+
+  socket.on('otherUserDecision', ({ decision }: { decision: 'continue' | 'finish' }) => {
+    setGameDecision(decision);
+  });
+
+  socket.on('acceptContinue', ({ moves, turn, game }: { moves: Move[]; turn: 'X' | 'O'; game: GameData }) => {
+    setCells(moves);
+    setTurn(turn);
+    setGameData(game);
+    startGame();
+  });
+
+  socket.on('acceptFinish', () => {
+    navigate('/', { replace: true });
+  });
+
+  // cell component
+  const Cell = ({ id, cell, className }: { id: number; cell: Move; className: string }) => {
+    console.log('#### cell', cell);
+    console.log('#### classnames', className);
+
+    return <div className={className} data-index={id} onClick={handleClick}></div>;
   };
 
-  const Cell = ({ index }: { index: number }) => {
-    return <div className="cell" data-index={index} onClick={() => handleClick(index)}></div>;
-  };
   return (
     <>
       <div className="text-center min-vh-100">
@@ -99,16 +237,29 @@ export default function PlayGround() {
       <button type="submit">send</button>
     </form> */}
         <p>my turn: {myTurn}</p>
-        <div className="board mx-auto">
-          <Cell index={0} />
-          <Cell index={1} />
-          <Cell index={2} />
-          <Cell index={3} />
-          <Cell index={4} />
-          <Cell index={5} />
-          <Cell index={6} />
-          <Cell index={7} />
-          <Cell index={8} />
+        <p>This is {turn} turn</p>
+        {gameStatus && (
+          <div className="alert alert-info m-3" role="alert">
+            {gameStatus}
+          </div>
+        )}
+
+        {gameDecision && (
+          <div className="alert alert-warning m-3" role="alert">
+            {gameDecision === 'continue' ? (
+              'the other user decide to continue  :)'
+            ) : (
+              <p>
+                the other user decide to finish the game, thanks for playing :), click <a href="/">here</a> to return
+                home
+              </p>
+            )}
+          </div>
+        )}
+        <div className={boardClassName.toString()}>
+          {cells?.map((cell, index) => {
+            return <Cell key={index} id={index} cell={cell} className={cellClassNames[index]} />;
+          })}
         </div>
         {/* <script id="message-template" type="text/html">
       <li className="list-li">
@@ -129,15 +280,14 @@ export default function PlayGround() {
       </li>
       {{/messages}}
     </script> */}
-        <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-          Launch demo modal
-        </button>
-        <div
+
+        {/* <div
           className="modal fade"
-          id="exampleModal"
           tabIndex={-1}
           aria-labelledby="exampleModalLabel"
           aria-hidden="true"
+          show={showModal}
+          onHide={handleCloseModal}
         >
           <div className="modal-dialog">
             <div className="modal-content">
@@ -146,7 +296,7 @@ export default function PlayGround() {
                   Game Is Over
                 </h5>
               </div>
-              <div className="modal-body">Do you want to continue?</div>
+              <div className="modal-body">{gameStatus}, Do you want to continue?</div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-dark" data-bs-dismiss="modal">
                   Continue
@@ -157,7 +307,22 @@ export default function PlayGround() {
               </div>
             </div>
           </div>
-        </div>
+  </div> */}
+
+        <Modal show={showModal} onHide={() => setShowModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Game Is Over</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{gameStatus}, Do you want to continue?</Modal.Body>
+          <Modal.Footer>
+            <Button variant="dark" onClick={continueHandler}>
+              Continue
+            </Button>
+            <Button variant="secondary" onClick={finishHandler}>
+              Quit
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </>
   );

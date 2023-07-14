@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getWaitingSocketClient } from '../socket.js';
+import { getSocket } from '../socket.js';
+const socket = getSocket();
 
 export default function WaitingRoom() {
   const location = useLocation();
@@ -8,7 +9,12 @@ export default function WaitingRoom() {
   const navigate = useNavigate();
   const gameId = location.state.gameId;
 
-  const socket = getWaitingSocketClient(gameId);
+  useEffect(() => {
+    socket.emit('join', {
+      gameId,
+      status: 'waiting',
+    });
+  }, [gameId]);
 
   socket.on('disconnect', () => {
     setError('unable to connect to server');
@@ -16,7 +22,6 @@ export default function WaitingRoom() {
 
   socket.on('someOneJoined', () => {
     console.log('###### on getting noticed that some one joind');
-    // socket.disconnect();
     navigate('/playground', { state: { gameId }, replace: true });
   });
 

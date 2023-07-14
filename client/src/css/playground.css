@@ -64,63 +64,63 @@ body {
   border-bottom: none;
 }
 
-.cell.x,
-.cell.o {
+.cell.X,
+.cell.O {
   cursor: not-allowed;
 }
 
-.cell.x::after,
-.cell.x::before,
-.cell.o::before {
+.cell.X::after,
+.cell.X::before,
+.cell.O::before {
   background-color: black;
 }
 
-.board.x .cell:not(.o):not(.x):hover::before,
-.board.x .cell:not(.o):not(.x):hover::after {
+.board.X .cell:not(.O):not(.X):hover::before,
+.board.X .cell:not(.O):not(.X):hover::after {
   background-color: lightgray;
 }
 
-.cell.x::before,
-.cell.x::after,
-.board.x .cell:not(.o):not(.x):hover::before,
-.board.x .cell:not(.o):not(.x):hover::after {
+.cell.X::before,
+.cell.X::after,
+.board.X .cell:not(.O):not(.X):hover::before,
+.board.X .cell:not(.O):not(.X):hover::after {
   content: '';
   width: calc(var(--markSize) * 0.14);
   height: var(--markSize);
   position: absolute;
 }
 
-.cell.x::before,
-.board.x .cell:not(.o):not(.x):hover::before {
+.cell.X::before,
+.board.X .cell:not(.O):not(.X):hover::before {
   transform: rotate(45deg);
 }
-.cell.x::after,
-.board.x .cell:not(.o):not(.x):hover::after {
+.cell.X::after,
+.board.X .cell:not(.O):not(.X):hover::after {
   transform: rotate(-45deg);
 }
 
-.cell.o::before,
-.cell.o::after,
-.board.o .cell:not(.o):not(.x):hover::before,
-.board.o .cell:not(.o):not(.x):hover::after {
+.cell.O::before,
+.cell.O::after,
+.board.O .cell:not(.O):not(.X):hover::before,
+.board.O .cell:not(.O):not(.X):hover::after {
   content: '';
   border-radius: 50%;
   position: absolute;
 }
 
-.cell.o::before,
-.board.o .cell:not(.o):not(.x):hover::before {
+.cell.O::before,
+.board.O .cell:not(.O):not(.X):hover::before {
   width: var(--markSize);
   height: var(--markSize);
 }
 
-.cell.o::after,
-.board.o .cell:not(.o):not(.x):hover::after {
+.cell.O::after,
+.board.O .cell:not(.O):not(.X):hover::after {
   width: calc(var(--markSize) * 0.7);
   height: calc(var(--markSize) * 0.7);
   background-color: white;
 }
 
-.board.o .cell:not(.o):not(.x):hover::before {
+.board.O .cell:not(.O):not(.X):hover::before {
   background-color: lightgray;
 }

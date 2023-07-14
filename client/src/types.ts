@@ -28,3 +28,5 @@ export type GameData = {
   user2Wins: number;
   drawsCount: number;
 };
+
+export type Move = 'X' | 'O' | 0;
