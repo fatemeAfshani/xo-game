@@ -17,12 +17,12 @@ export default function Footer() {
 
         <ul className="nav col-md-4 justify-content-end list-unstyled d-flex">
           <li className="ms-3">
-            <a className="text-body-secondary" href="#">
+            <a className="text-body-secondary" href="https://github.com/fatemeAfshani">
               <Icon.Github size={30} />
             </a>
           </li>
           <li className="ms-3">
-            <a className="text-body-secondary" href="#">
+            <a className="text-body-secondary" href="https://linkedin.com/in/fatemeh-afshani-310095181">
               <Icon.Linkedin size={30} />
             </a>
           </li>
