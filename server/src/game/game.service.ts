@@ -12,7 +12,7 @@ import { Game } from './game.schema';
 import { UserRepository } from 'src/user/user.repository';
 import { Types } from 'mongoose';
 import { User } from 'src/user/user.schema';
-import { OpenGame } from './utils/types';
+import { OpenGame } from '../types';
 import { RedisService } from '@liaoliaots/nestjs-redis';
 import Redis from 'ioredis';
 

@@ -11,6 +11,9 @@ import {
 } from '@nestjs/websockets';
 import { Namespace, Server, Socket } from 'socket.io';
 import { GameProvider } from './game.provider';
+import { Game } from './game.schema';
+import { UserMoveDto } from './dto/usermove.dto';
+import { JoinDataDto } from './dto/joindata.dto';
 
 @WebSocketGateway({ namespace: 'playground', cors: {} })
 export class PlaygroundGateway
@@ -36,9 +39,25 @@ export class PlaygroundGateway
     // this.logger.debug(
     //   `Number of connected sockets to playground: ${sockets.size}`,
     // );
+  }
 
-    const gameId = client.handshake.headers.game as string;
-    const status = client.handshake.headers.status as string;
+  async handleDisconnect(client: Socket) {
+    const sockets = this.playground.sockets;
+    // const roomName = client.pollID;
+    // const clientCount = this.io.adapter.rooms?.get(roomName)?.size ?? 0;
+
+    this.logger.log(`Disconnected socket id: ${client.id}`);
+    this.logger.debug(`Number of connected sockets: ${sockets.size}`);
+    // this.logger.debug(
+    //   `Total clients connected to room '${roomName}': ${clientCount}`,
+    // );
+  }
+
+  @SubscribeMessage('join')
+  async joinARoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() { gameId, status }: JoinDataDto,
+  ) {
     console.log('#### gameId, status', gameId, status);
     this.logger.debug(
       `adding client : ${client.id} to room-${gameId} with status ${status}`,
@@ -56,15 +75,22 @@ export class PlaygroundGateway
     //   this.playground.adapter.rooms?.get(`room-${gameId}`)?.size,
     // );
     if (this.playground.adapter.rooms?.get(`room-${gameId}`)?.size > 2) {
+      console.log('#### before disconnecting user');
       client.disconnect(true);
     }
 
     this.logger.debug(
-      `Number of connected sockets in playground: ${sockets.size}`,
+      `Number of connected sockets in playground room: ${
+        this.playground.adapter.rooms?.get(`room-${gameId}`)?.size
+      }`,
     );
 
+    this.logger.debug(
+      `number of user connected to waiting room ${
+        this.playground.adapter.rooms?.get(`waiting-${gameId}`)?.size
+      }`,
+    );
     if (status !== 'waiting') {
-      this.logger.debug('before emiting to waiting room');
       client.to(`waiting-${gameId}`).emit('someOneJoined');
 
       const gameData = await this.gameProvider.getGameData(gameId);
@@ -75,58 +101,53 @@ export class PlaygroundGateway
       const gameMoves = await this.gameProvider.getGameMoves(gameId);
       this.logger.debug('#### getting game moves', gameMoves);
       client.emit('gameMoves', gameMoves);
+
+      const gameTurn = await this.gameProvider.getGameTurn(gameId);
+      this.logger.debug('##### getting game turn', gameTurn);
+      client.emit('gameTurn', gameTurn);
     }
   }
 
-  async handleDisconnect(client: Socket) {
-    const sockets = this.playground.sockets;
-    // const roomName = client.pollID;
-    // const clientCount = this.io.adapter.rooms?.get(roomName)?.size ?? 0;
+  @SubscribeMessage('userMove')
+  async handleUserMove(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: UserMoveDto,
+  ): Promise<void> {
+    const { changes, status, game } = await this.gameProvider.userMove(data);
 
-    this.logger.log(`Disconnected socket id: ${client.id}`);
-    this.logger.debug(`Number of connected sockets: ${sockets.size}`);
-    // this.logger.debug(
-    //   `Total clients connected to room '${roomName}': ${clientCount}`,
-    // );
-
-    // updatedPoll could be undefined if the the poll already started
-    // in this case, the socket is disconnect, but no the poll state
-    // if (updatedPoll) {
-    //   this.io.to(pollID).emit('poll_updated', updatedPoll);
-    // }
+    this.playground.to(`room-${data.gameId}`).emit('changesForUser', changes);
+    if (status) {
+      this.playground
+        .to(`room-${data.gameId}`)
+        .emit('endRound', { game, status });
+    }
   }
 
-  // @SubscribeMessage('message')
-  // handleMessage(client: any, payload: any): string {
-  //   return 'Hello world!';
-  // }
+  @SubscribeMessage('continue')
+  async handleCountinueAnotherRound(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('gameId') gameId: string,
+  ): Promise<void> {
+    this.logger.debug('#### continue gameid', gameId);
+    const { moves, turn, game } = await this.gameProvider.continueGame(gameId);
+    this.logger.debug('#### continue', moves, turn, game);
+    client.emit('acceptContinue', { moves, turn, game });
+    client
+      .to(`room-${gameId}`)
+      .emit('otherUserDecision', { decision: 'continue' });
+  }
 
-  // @SubscribeMessage('joinGame')
-  // async addUserGame(
-  //   @MessageBody('gameId') gameId: string,
-  //   @ConnectedSocket() client: Socket,
-  // ): Promise<void> {
-  //   this.logger.log(
-  //     `adding client : ${client.id} to room-${gameId} playground`,
-  //   );
-  //   const sockets = this.playground.sockets;
-  //   if (sockets.size > 2) {
-  //     await client.disconnect();
-  //   }
+  @SubscribeMessage('finish')
+  async handleFinishGame(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('gameId') gameId: string,
+  ): Promise<void> {
+    this.logger.debug('#### finish gameid', gameId);
+    await this.gameProvider.finishGame(gameId);
+    client.emit('acceptFinish', '');
 
-  //   this.logger.debug(
-  //     `Number of connected sockets in playground: ${sockets.size}`,
-  //   );
-
-  //   await client.join(`room-${gameId}`);
-
-  //   console.log('#### before sending data to waiting user');
-  //   await client.to(`room-${gameId}`).emit('someOneJoined');
-  //   // await this.playground.to(`room-${gameId}`).emit('someOneJoined');
-  //   // const updatedPoll = await this.pollsService.removeNomination(
-  //   //   client.pollID,
-  //   //   nominationID,
-  //   // );
-  //   // this.io.to(client.pollID).emit('poll_updated', updatedPoll);
-  // }
+    client
+      .to(`room-${gameId}`)
+      .emit('otherUserDecision', { decision: 'finish' });
+  }
 }

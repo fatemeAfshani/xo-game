@@ -13,7 +13,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/user/user.decorator';
 import { GameService } from './game.service';
 import { User } from 'src/user/user.schema';
-import { OpenGame } from './utils/types';
+import { OpenGame } from '../types';
 import { Types } from 'mongoose';
 
 @Controller('games')

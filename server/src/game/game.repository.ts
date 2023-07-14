@@ -51,19 +51,24 @@ export class GameRepository {
     return game;
   }
 
-  async findOneAndUpdate(
-    filterQuery: FilterQuery<Game>,
-    update: UpdateQuery<Game>,
-  ) {
-    const game = await this.gameModel.findOneAndUpdate(filterQuery, update, {
-      lean: true,
-      new: true,
-    });
-
+  async finishGame(filterQuery: FilterQuery<Game>, update: UpdateQuery<Game>) {
+    const game = await this.gameModel.findOne(filterQuery);
     if (!game) {
       this.logger.warn(`game not found with filterQuery:`, filterQuery);
       throw new NotFoundException('game not found.');
-    }
+    } else if (game.roundsCount) return null;
+    console.log('### game', game);
+    game.roundsCount = update.roundsCount;
+    game.user1Wins = update.user1Wins;
+    game.user2Wins = update.user2Wins;
+    game.drawsCount = update.drawsCount;
+
+    await game.save();
+    // const game = await this.gameModel.findOneAndUpdate(filterQuery, update, {
+    //   lean: true,
+    //   new: true,
+    // });
+
     return game;
   }
 
@@ -82,14 +87,6 @@ export class GameRepository {
     this.logger.debug('##### after joining to game', game);
     return game;
   }
-
-  //   async upsert(filterQuery: FilterQuery<User>, document: Partial<User>) {
-  //     return this.userModel.findOneAndUpdate(filterQuery, document, {
-  //       lean: true,
-  //       upsert: true,
-  //       new: true,
-  //     });
-  //   }
 
   async find(filterQuery: FilterQuery<Game>) {
     return this.gameModel
