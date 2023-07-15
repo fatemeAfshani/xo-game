@@ -88,9 +88,9 @@ export class GameService {
         }
       });
 
-      console.log('#### openGames', openGames);
+      console.log('#### openGames', openGames, openGames[0]);
 
-      return openGames;
+      return openGames?.[0] ? openGames : [];
     } catch (error: any) {
       this.logger.error('error in getting open games', error);
       throw new UnauthorizedException();

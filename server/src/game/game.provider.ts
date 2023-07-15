@@ -242,4 +242,14 @@ export class GameProvider {
     const messagesData = await this.redis.get(`messages-${gameId}`);
     return JSON.parse(messagesData);
   }
+
+  async getOpenGameTtl(gameId: string): Promise<number> {
+    const ttl = await this.redis.ttl(`open-game-${gameId}`);
+    console.log('###### game ttl', ttl);
+    if (ttl > 0) {
+      return ttl;
+    }
+
+    return 0;
+  }
 }

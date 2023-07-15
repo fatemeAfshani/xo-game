@@ -91,7 +91,11 @@ export class PlaygroundGateway
         this.playground.adapter.rooms?.get(`waiting-${gameId}`)?.size
       }`,
     );
-    if (status !== 'waiting') {
+
+    if (status === 'waiting') {
+      const ttl = await this.gameProvider.getOpenGameTtl(gameId);
+      this.playground.to(`waiting-${gameId}`).emit('gameTtl', ttl);
+    } else {
       client.to(`waiting-${gameId}`).emit('someOneJoined');
 
       const gameData = await this.gameProvider.getGameData(gameId);
