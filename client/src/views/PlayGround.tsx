@@ -21,15 +21,12 @@ export default function PlayGround() {
   const [cellClassNames, setCellClassNames] = useState<string[]>(Array(9).fill('cell'));
   const [boardClassName, setBoardClassName] = useState('board mx-auto');
 
-  console.log('#### cellClassNamse', cellClassNames);
   const x_Class = 'X';
 
   const location = useLocation();
   const navigate = useNavigate();
   const gameId = location.state.gameId;
   const { user } = useAuth();
-
-  console.log('### playground screen', user);
 
   useEffect(() => {
     socket.emit('join', {
@@ -60,7 +57,6 @@ export default function PlayGround() {
       }
     });
 
-    console.log('#### cell class name in continue game', newClassNames);
     setCellClassNames(newClassNames);
     setHover();
   }, [cells, setHover]);
@@ -75,7 +71,6 @@ export default function PlayGround() {
     const newGame = cells?.every((move) => {
       return move == 0;
     });
-    console.log('##### new game?', newGame);
     if (newGame) {
       startGame();
     } else {
@@ -86,17 +81,16 @@ export default function PlayGround() {
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (gameDecision) setGameDecision('');
     if (gameStatus) setGameStatus('');
-    console.log('#### e.target', e.target);
+
     const cell = e.target as Element;
     const cellIndex = cell.getAttribute('data-index') as unknown as number;
-    console.log('### cellIndex', cellIndex, cells[cellIndex]);
+
     if (cells[cellIndex] !== 'X' && cells[cellIndex] !== 'O' && turn == myTurn) {
-      console.log('#### here');
-      const newCellClassNames = [...cellClassNames]; // Create a new copy of the array
+      const newCellClassNames = [...cellClassNames];
 
       newCellClassNames[cellIndex] = `cell ${myTurn}`;
-      console.log('#### updatd cellClass name', newCellClassNames);
       setCellClassNames(newCellClassNames);
+
       const data = {
         turn,
         index: cellIndex,
@@ -125,17 +119,15 @@ export default function PlayGround() {
     });
 
     socket.on('gameMoves', (moves: Move[]) => {
-      console.log('#### moves', moves);
       setCells(moves);
     });
 
     socket.on('endRound', ({ status }: { game: GameData; status: string }) => {
       setGameStatus(status);
-
       setShowModal(true);
     });
+
     socket.on('gameTurn', (turn: 'X' | 'O') => {
-      console.log('#### turn', turn);
       setTurn(turn);
     });
 
@@ -146,7 +138,6 @@ export default function PlayGround() {
 
   useEffect(() => {
     socket.on('gameData', (game: GameData) => {
-      console.log('#### game data in playground', game);
       if (game?.user1?._id === user?.userId) {
         setMyTurn('X');
       } else {
@@ -164,7 +155,6 @@ export default function PlayGround() {
 
   useEffect(() => {
     socket.on('changesForUser', ({ moves, newTurn }: { moves: Move[]; newTurn: 'X' | 'O' }) => {
-      console.log('####### in changes for user');
       setTurn(newTurn);
       setCells(moves);
       continueGame();
@@ -188,7 +178,6 @@ export default function PlayGround() {
     <>
       <div className="text-center min-vh-100">
         <h4 className="m-3">Play Gound</h4>
-        {/* <p id="error-message" className="error-message"></p> */}
         {error && (
           <div className="alert alert-danger m-3" role="alert">
             {error}
@@ -228,20 +217,6 @@ export default function PlayGround() {
             <div className="col-3">draws: {gameData?.drawsCount}</div>
           </div>
         </div>
-        {/* <h4>messages</h4>
-    <ul id="messages"></ul>
-    <p id="game-message" className="error-message"></p>
-    <form id="messageForm" className="form">
-      <h3>send message</h3>
-      <p className="error-message"></p>
-      <input
-        type="text"
-        name="msgInput"
-        placeholder="message"
-        required
-        />
-      <button type="submit">send</button>
-    </form> */}
 
         <p>my turn: {myTurn}</p>
         <p>This is {turn} turn</p>
@@ -268,6 +243,7 @@ export default function PlayGround() {
             return <Cell key={index} id={index} className={cellClassNames[index]} />;
           })}
         </div>
+
         <Messages
           gameId={gameId}
           socket={socket}
@@ -275,6 +251,7 @@ export default function PlayGround() {
             (gameData?.user1?._id === user?.userId ? gameData?.user1?.username : gameData?.user2.username) || ''
           }
         ></Messages>
+
         <Modal show={showModal} onHide={() => setShowModal(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Game Is Over</Modal.Title>

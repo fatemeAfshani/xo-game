@@ -81,7 +81,6 @@ export default function Home() {
           },
         });
 
-        console.log('##### resposne.data', response.data);
         if (response.data) {
           setUser({ ...response.data });
           dispatch({
@@ -107,7 +106,6 @@ export default function Home() {
           },
         });
 
-        console.log('##### resposne.data', response.data);
         if (response.data) {
           setOpenGames(response.data);
           dispatch({
@@ -133,7 +131,6 @@ export default function Home() {
           },
         });
 
-        console.log('##### history data', response.data);
         if (response.data) {
           setHistoryGame(response.data);
           dispatch({
@@ -164,7 +161,6 @@ export default function Home() {
         },
       });
 
-      console.log('##### resposne.data', response.data);
       navigate('waiting', { state: { gameId: response?.data._id } });
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
@@ -186,7 +182,6 @@ export default function Home() {
         },
       });
 
-      console.log('##### after joining game', response.data);
       if (response.data) {
         navigate('/playground', { state: { gameId } });
       }

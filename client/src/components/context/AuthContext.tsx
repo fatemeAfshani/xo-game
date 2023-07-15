@@ -33,7 +33,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     const now = new Date();
     const item = {
       token: accessToken,
-      expire: now.getTime() + 3600 * 1000,
+      expire: (now.getTime() + 36000) * 1000,
       userId,
     };
     localStorage.setItem('userData', JSON.stringify(item));
@@ -41,7 +41,6 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = () => {
-    console.log('#### here');
     localStorage.removeItem('tokenData');
     setUser(null);
   };
@@ -68,6 +67,7 @@ const getLocalStorageData = () => {
       expire: string;
       userId: string;
     };
+
     userIdData = userId;
 
     if (new Date() > new Date(expire)) {

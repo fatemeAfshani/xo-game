@@ -6,16 +6,13 @@ export default function Messages({ gameId, socket, username }: { gameId: string;
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
 
-  console.log('#### in here', messages);
   useEffect(() => {
     socket.on('sendMessage', (message: Message) => {
-      console.log('#### here', message);
       setNewMessage('');
       setMessages((preArray) => [...preArray, message]);
     });
 
     socket.on('messageHistory', (messages: Message[]) => {
-      console.log('#### messages', messages);
       setMessages(messages);
     });
   }, [socket]);

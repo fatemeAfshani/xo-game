@@ -18,27 +18,24 @@ export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, login } = useAuth();
-  console.log('#### userToken', user?.token);
+
   const redirectPath = location?.state?.path || '/';
   if (user?.token) navigate(redirectPath);
 
   const clickHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
       event.preventDefault();
-      console.log('#### base url', import.meta.env.VITE_URL);
 
       const response = await axios({
         method: 'post',
         data: userData,
         url: `${import.meta.env.VITE_URL as string}/users/signin`,
       });
-      console.log('##### response.data', response.data);
       login(response.data);
       navigate(redirectPath, { replace: true });
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
 
-      console.log('#### error', errorMessage);
       setSignInError(errorMessage);
     }
   };

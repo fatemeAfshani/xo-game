@@ -6,6 +6,7 @@ const socket = getSocket();
 export default function WaitingRoom() {
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(-1);
+
   const location = useLocation();
   const navigate = useNavigate();
   const gameId = location.state.gameId;
@@ -17,7 +18,6 @@ export default function WaitingRoom() {
     });
 
     socket.on('gameTtl', (ttl: number) => {
-      console.log('### ttle', ttl);
       setTimer(ttl);
     });
   }, [gameId]);
@@ -30,7 +30,6 @@ export default function WaitingRoom() {
 
   useEffect(() => {
     socket.on('someOneJoined', () => {
-      console.log('###### on getting noticed that some one joind');
       navigate('/playground', { state: { gameId }, replace: true });
     });
   }, [gameId, navigate]);

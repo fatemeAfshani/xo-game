@@ -4,14 +4,14 @@ import { io } from 'socket.io-client';
 let socket = io(`${import.meta.env.VITE_URL as string}/playground`);
 
 socket.on('connect', () => {
-  console.log('im connected to playgrounddddd');
+  console.log('im connected to playground socket');
 });
 export const getSocket = (): Socket => {
   if (socket) {
-    console.log('##### returning socketttt');
+    console.log('##### returning socket');
     return socket;
   }
-  console.log('#### creating socketttt');
+  console.log('#### creating socket');
   socket = io(`${import.meta.env.VITE_URL as string}/playground`);
   return socket;
 };

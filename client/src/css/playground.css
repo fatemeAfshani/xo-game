@@ -126,7 +126,7 @@ body {
 }
 
 .scrollable-element {
-  height: 300px; /* Specify the desired height */
-  overflow-y: auto; /* Enable vertical scrolling */
-  overflow-x: hidden; /* Enable vertical scrolling */
+  height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

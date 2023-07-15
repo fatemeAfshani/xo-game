@@ -14,20 +14,18 @@ export default function Signup() {
     password: '',
   });
   const [registerError, setRegisterError] = useState('');
-
   const [passwordError, setPasswordError] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
   const { user, login } = useAuth();
-  console.log('#### userToken', user?.token);
+
   const redirectPath = location?.state?.path || '/';
   if (user?.token) navigate(redirectPath);
 
   const clickHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
       event.preventDefault();
-      console.log('#### base url', import.meta.env.VITE_URL);
 
       const response = await axios({
         method: 'post',
@@ -39,7 +37,6 @@ export default function Signup() {
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
 
-      console.log('#### error', errorMessage);
       setRegisterError(errorMessage);
     }
   };
