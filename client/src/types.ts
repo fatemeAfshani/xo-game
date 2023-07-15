@@ -30,3 +30,9 @@ export type GameData = {
 };
 
 export type Move = 'X' | 'O' | 0;
+
+export type Message = {
+  message: string;
+  username: string;
+  timestamp: string;
+};

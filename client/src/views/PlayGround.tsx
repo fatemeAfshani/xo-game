@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/context/AuthContext.js';
+import Messages from '../components/Messages.js';
 import '../css/playground.css';
 import { getSocket } from '../socket.js';
 import { GameData, Move } from '../types.js';
@@ -22,7 +23,6 @@ export default function PlayGround() {
 
   console.log('#### cellClassNamse', cellClassNames);
   const x_Class = 'X';
-  // const o_Class = 'O';
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -49,7 +49,8 @@ export default function PlayGround() {
   }, [myTurn, turn]);
 
   const continueGame = useCallback(() => {
-    const newClassNames = cells.map((cell) => {
+    const newCells = [...cells];
+    const newClassNames = newCells.map((cell) => {
       if (cell === 0) {
         return 'cell';
       } else if (cell === x_Class) {
@@ -60,8 +61,6 @@ export default function PlayGround() {
     });
 
     console.log('#### cell class name in continue game', newClassNames);
-    setCellClassNames(newClassNames);
-
     setCellClassNames(newClassNames);
     setHover();
   }, [cells, setHover]);
@@ -93,9 +92,11 @@ export default function PlayGround() {
     console.log('### cellIndex', cellIndex, cells[cellIndex]);
     if (cells[cellIndex] !== 'X' && cells[cellIndex] !== 'O' && turn == myTurn) {
       console.log('#### here');
-      cellClassNames[cellIndex] = `cell ${myTurn}`;
-      console.log('#### updatd cellClass name', cellClassNames);
-      setCellClassNames(cellClassNames);
+      const newCellClassNames = [...cellClassNames]; // Create a new copy of the array
+
+      newCellClassNames[cellIndex] = `cell ${myTurn}`;
+      console.log('#### updatd cellClass name', newCellClassNames);
+      setCellClassNames(newCellClassNames);
       const data = {
         turn,
         index: cellIndex,
@@ -107,77 +108,82 @@ export default function PlayGround() {
     }
   };
 
-  const continueHandler = () => {
+  const continueHandler = useCallback(() => {
     socket.emit('continue', { gameId });
     setShowModal(false);
-  };
+  }, [gameId]);
 
-  const finishHandler = () => {
+  const finishHandler = useCallback(() => {
     socket.emit('finish', { gameId });
     setShowModal(false);
-  };
+  }, [gameId]);
 
   // socket logic
+  useEffect(() => {
+    socket.on('disconnect', () => {
+      setError('unable to connect to server');
+    });
 
-  socket.on('disconnect', () => {
-    setError('unable to connect to server');
-  });
+    socket.on('gameMoves', (moves: Move[]) => {
+      console.log('#### moves', moves);
+      setCells(moves);
+    });
 
-  socket.on('gameData', (game: GameData) => {
-    console.log('#### game data in playground', game);
-    if (game?.user1?._id === user?.userId) {
-      setMyTurn('X');
-    } else {
-      setMyTurn('O');
-    }
-    setGameData(game);
-  });
+    socket.on('endRound', ({ status }: { game: GameData; status: string }) => {
+      setGameStatus(status);
 
-  socket.on('gameMoves', (moves: Move[]) => {
-    console.log('#### moves', moves);
-    setCells(moves);
-  });
+      setShowModal(true);
+    });
+    socket.on('gameTurn', (turn: 'X' | 'O') => {
+      console.log('#### turn', turn);
+      setTurn(turn);
+    });
 
-  socket.on('gameTurn', (turn: 'X' | 'O') => {
-    console.log('#### turn', turn);
-    setTurn(turn);
-  });
+    socket.on('otherUserDecision', ({ decision }: { decision: 'continue' | 'finish' }) => {
+      setGameDecision(decision);
+    });
+  }, []);
 
-  socket.on('changesForUser', ({ moves, newTurn }: { moves: Move[]; newTurn: 'X' | 'O' }) => {
-    setTurn(newTurn);
-    setCells(moves);
-    continueGame();
-  });
+  useEffect(() => {
+    socket.on('gameData', (game: GameData) => {
+      console.log('#### game data in playground', game);
+      if (game?.user1?._id === user?.userId) {
+        setMyTurn('X');
+      } else {
+        setMyTurn('O');
+      }
+      setGameData(game);
+    });
+  }, [user]);
 
-  socket.on('endRound', ({ status }: { game: GameData; status: string }) => {
-    setGameStatus(status);
+  useEffect(() => {
+    socket.on('acceptFinish', () => {
+      navigate('/', { replace: true });
+    });
+  }, [navigate]);
 
-    setShowModal(true);
-  });
+  useEffect(() => {
+    socket.on('changesForUser', ({ moves, newTurn }: { moves: Move[]; newTurn: 'X' | 'O' }) => {
+      console.log('####### in changes for user');
+      setTurn(newTurn);
+      setCells(moves);
+      continueGame();
+    });
+  }, [continueGame]);
 
-  socket.on('otherUserDecision', ({ decision }: { decision: 'continue' | 'finish' }) => {
-    setGameDecision(decision);
-  });
-
-  socket.on('acceptContinue', ({ moves, turn, game }: { moves: Move[]; turn: 'X' | 'O'; game: GameData }) => {
-    setCells(moves);
-    setTurn(turn);
-    setGameData(game);
-    startGame();
-  });
-
-  socket.on('acceptFinish', () => {
-    navigate('/', { replace: true });
-  });
+  useEffect(() => {
+    socket.on('acceptContinue', ({ moves, turn, game }: { moves: Move[]; turn: 'X' | 'O'; game: GameData }) => {
+      setCells(moves);
+      setTurn(turn);
+      setGameData(game);
+      startGame();
+    });
+  }, [startGame]);
 
   // cell component
-  const Cell = ({ id, cell, className }: { id: number; cell: Move; className: string }) => {
-    console.log('#### cell', cell);
-    console.log('#### classnames', className);
-
+  const Cell = ({ id, className }: { id: number; className: string }) => {
     return <div className={className} data-index={id} onClick={handleClick}></div>;
   };
-
   return (
     <>
       <div className="text-center min-vh-100">
@@ -236,6 +242,7 @@ export default function PlayGround() {
         />
       <button type="submit">send</button>
     </form> */}
+
         <p>my turn: {myTurn}</p>
         <p>This is {turn} turn</p>
         {gameStatus && (
@@ -258,57 +265,16 @@ export default function PlayGround() {
         )}
         <div className={boardClassName.toString()}>
           {cells?.map((cell, index) => {
-            return <Cell key={index} id={index} cell={cell} className={cellClassNames[index]} />;
+            return <Cell key={index} id={index} className={cellClassNames[index]} />;
           })}
         </div>
-        {/* <script id="message-template" type="text/html">
-      <li className="list-li">
-        <span>{{nickName}}</span>
-        <span>{{createdAt}}</span>
-        <p>{{msg}}</p>
-      </li>
-    </script>
-
-    <script id="message-history-template" type="text/html">
-      <!-- this is a specific syntax for refering an array between this two tags we say what we want to do with array items -->
-      {{#messages}}
-
-      <li className="list-li">
-        <span>{{nickName}}</span>
-        <span>{{createdAt}}</span>
-        <p>{{text}}</p>
-      </li>
-      {{/messages}}
-    </script> */}
-
-        {/* <div
-          className="modal fade"
-          tabIndex={-1}
-          aria-labelledby="exampleModalLabel"
-          aria-hidden="true"
-          show={showModal}
-          onHide={handleCloseModal}
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="exampleModalLabel">
-                  Game Is Over
-                </h5>
-              </div>
-              <div className="modal-body">{gameStatus}, Do you want to continue?</div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-dark" data-bs-dismiss="modal">
-                  Continue
-                </button>
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-                  Quit
-                </button>
-              </div>
-            </div>
-          </div>
-  </div> */}
-
+        <Messages
+          gameId={gameId}
+          socket={socket}
+          username={
+            (gameData?.user1?._id === user?.userId ? gameData?.user1?.username : gameData?.user2.username) || ''
+          }
+        ></Messages>
         <Modal show={showModal} onHide={() => setShowModal(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Game Is Over</Modal.Title>

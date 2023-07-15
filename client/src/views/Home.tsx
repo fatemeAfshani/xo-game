@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useEffect, useReducer, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/context/AuthContext.js';
-import { API_ACTIONS, OpenGame, User } from '../types.js';
+import { API_ACTIONS, GameData, OpenGame, User } from '../types.js';
 import { getErrorMessage } from '../utils.js';
 
 type UserState = {
@@ -67,6 +67,7 @@ export default function Home() {
   });
 
   const [openGames, setOpenGames] = useState<OpenGame[]>([]);
+  const [historyGame, setHistoryGame] = useState<GameData[]>([]);
 
   useEffect(() => {
     dispatch({ type: API_ACTIONS.CALL_API });
@@ -117,8 +118,33 @@ export default function Home() {
         dispatch({ type: API_ACTIONS.ERROR, error: errorMessage });
       }
     };
+
+    const getUserHistoryGames = async () => {
+      try {
+        const response = await axios({
+          url: `${import.meta.env.VITE_URL as string}/games/history`,
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${userAuth?.token}`,
+          },
+        });
+
+        console.log('##### history data', response.data);
+        setHistoryGame(response.data);
+        dispatch({
+          type: API_ACTIONS.SUCCESS,
+        });
+      } catch (error: any) {
+        if (error.response && error.response.status === 401) {
+          logout();
+        }
+        const errorMessage = getErrorMessage(error);
+        dispatch({ type: API_ACTIONS.ERROR, error: errorMessage });
+      }
+    };
     getUser();
     getOpenGames();
+    getUserHistoryGames();
   }, [userAuth?.token, logout]);
 
   const createAGame = async () => {
@@ -197,11 +223,11 @@ export default function Home() {
           <button className="btn btn-dark p-3 m-3 btn-large">join via inviteCode</button>
         </div>
       </div>
-      <div className="row text-center">
+      <div className="row text-center mt-4">
         <div className="col-sm-12 col-md-6">
           <h5 className="my-4">open games </h5>
-          <table className="table  table-striped">
-            <thead>
+          <table className="table  table-hover">
+            <thead className="thead-dark">
               <tr>
                 <th scope="col">Username</th>
                 <th scope="col">Score</th>
@@ -220,6 +246,38 @@ export default function Home() {
                           join
                         </button>
                       </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+        <div className="col-sm-12 col-md-6">
+          <h5 className="my-4">played games </h5>
+          <table className="table  table-hover ">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Opponent</th>
+                <th scope="col">RoundsCound</th>
+                <th scope="col">My Wins</th>
+                <th scope="col">Opponent Wins</th>
+                <th scope="col">Draws</th>
+              </tr>
+            </thead>
+            <tbody>
+              {historyGame?.length > 0 &&
+                historyGame?.map((game, index) => {
+                  const user1IsMe = game.user1._id === user._id;
+                  const amWinner = user1IsMe ? game.user1Wins > game.user2Wins : game.user2Wins > game.user1Wins;
+                  return (
+                    <tr key={index} className={amWinner ? 'table-info' : 'table-danger'}>
+                      <td>{index + 1}</td>
+                      <td>{user1IsMe ? game.user2.username : game.user1.username}</td>
+                      <td> {game.roundsCount}</td>
+                      <td>{user1IsMe ? game.user1Wins : game.user2Wins}</td>
+                      <td>{user1IsMe ? game.user2Wins : game.user1Wins}</td>
+                      <td>{game.drawsCount}</td>
                     </tr>
                   );
                 })}
