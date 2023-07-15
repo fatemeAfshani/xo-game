@@ -31,14 +31,14 @@ export default function Header() {
             <img src="https://github.com/mdo.png" alt="mdo" width="32" height="32" className="rounded-circle"></img>
           </a>
           <ul className="dropdown-menu text-small" aria-labelledby="dropdownUser1">
-            <li>
+            {/* <li>
               <a className="dropdown-item" href="#">
                 Profile
               </a>
-            </li>
-            <li>
+            </li> */}
+            {/* <li>
               <hr className="dropdown-divider"></hr>
-            </li>
+            </li> */}
             <li>
               <button className="dropdown-item" onClick={() => logout()}>
                 Sign out

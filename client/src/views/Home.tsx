@@ -82,10 +82,12 @@ export default function Home() {
         });
 
         console.log('##### resposne.data', response.data);
-        setUser({ ...response.data });
-        dispatch({
-          type: API_ACTIONS.SUCCESS,
-        });
+        if (response.data) {
+          setUser({ ...response.data });
+          dispatch({
+            type: API_ACTIONS.SUCCESS,
+          });
+        }
       } catch (error: any) {
         if (error.response && error.response.status === 401) {
           logout();
@@ -106,10 +108,12 @@ export default function Home() {
         });
 
         console.log('##### resposne.data', response.data);
-        setOpenGames(response.data);
-        dispatch({
-          type: API_ACTIONS.SUCCESS,
-        });
+        if (response.data) {
+          setOpenGames(response.data);
+          dispatch({
+            type: API_ACTIONS.SUCCESS,
+          });
+        }
       } catch (error: any) {
         if (error.response && error.response.status === 401) {
           logout();
@@ -130,10 +134,12 @@ export default function Home() {
         });
 
         console.log('##### history data', response.data);
-        setHistoryGame(response.data);
-        dispatch({
-          type: API_ACTIONS.SUCCESS,
-        });
+        if (response.data) {
+          setHistoryGame(response.data);
+          dispatch({
+            type: API_ACTIONS.SUCCESS,
+          });
+        }
       } catch (error: any) {
         if (error.response && error.response.status === 401) {
           logout();
@@ -206,22 +212,22 @@ export default function Home() {
       )}
 
       <div className="row text-center m-5 fs-3">
-        <div className="col-sm-12 h5 mb-3">username: {user.username}</div>
-        <div className="col-sm-6 col-md-3 h6">score: {user.score}</div>
-        <div className="col-sm-6 col-md-3 h6">winCount: {user.winCount}</div>
-        <div className="col-sm-6 col-md-3 h6">lossCount: {user.lossCount}</div>
-        <div className="col-sm-6 col-md-3 h6">drawCount: {user.drawCount}</div>
+        <div className="col-sm-12 h4 mb-3">username: {user.username}</div>
+        <div className="col-sm-6 col-md-3 h5">score: {user.score}</div>
+        <div className="col-sm-6 col-md-3 h5">winCount: {user.winCount}</div>
+        <div className="col-sm-6 col-md-3 h5">lossCount: {user.lossCount}</div>
+        <div className="col-sm-6 col-md-3 h5">drawCount: {user.drawCount}</div>
       </div>
 
       <div className="row text-center">
-        <div className="col-sm-12 col-md-6">
+        <div className="col-12">
           <button className="btn btn-dark p-3 m-3 btn-large" onClick={() => createAGame()}>
             create a game
           </button>
         </div>
-        <div className="col-sm-12 col-md-6">
+        {/* <div className="col-sm-12 col-md-6">
           <button className="btn btn-dark p-3 m-3 btn-large">join via inviteCode</button>
-        </div>
+        </div> */}
       </div>
       <div className="row text-center mt-4">
         <div className="col-sm-12 col-md-6">

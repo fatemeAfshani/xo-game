@@ -4,8 +4,9 @@ import { getSocket } from '../socket.js';
 const socket = getSocket();
 
 export default function WaitingRoom() {
-  const location = useLocation();
   const [error, setError] = useState('');
+  const [timer, setTimer] = useState(-1);
+  const location = useLocation();
   const navigate = useNavigate();
   const gameId = location.state.gameId;
 
@@ -14,21 +15,45 @@ export default function WaitingRoom() {
       gameId,
       status: 'waiting',
     });
+
+    socket.on('gameTtl', (ttl: number) => {
+      console.log('### ttle', ttl);
+      setTimer(ttl);
+    });
   }, [gameId]);
 
-  socket.on('disconnect', () => {
-    setError('unable to connect to server');
-  });
+  useEffect(() => {
+    socket.on('disconnect', () => {
+      setError('unable to connect to server');
+    });
+  }, []);
 
-  socket.on('someOneJoined', () => {
-    console.log('###### on getting noticed that some one joind');
-    navigate('/playground', { state: { gameId }, replace: true });
-  });
+  useEffect(() => {
+    socket.on('someOneJoined', () => {
+      console.log('###### on getting noticed that some one joind');
+      navigate('/playground', { state: { gameId }, replace: true });
+    });
+  }, [gameId, navigate]);
 
-  //get game ttl
-  //   useEffect(() => {
+  useEffect(() => {
+    const countdown = setInterval(() => {
+      setTimer((prevTimer) => prevTimer - 1);
+    }, 1000);
 
-  //   }, [])
+    if (timer === 0) {
+      clearInterval(countdown);
+      navigate('/', { replace: true });
+    }
+
+    return () => {
+      clearInterval(countdown);
+    };
+  }, [timer, navigate]);
+
+  const minutes = Math.floor(timer / 60)
+    .toString()
+    .padStart(2, '0');
+  const seconds = (timer % 60).toString().padStart(2, '0');
 
   return (
     <>
@@ -38,8 +63,12 @@ export default function WaitingRoom() {
             {error}
           </div>
         )}
-        <div className="h5 my-5">Waiting for someone to join ... </div>
-        {/*  implement timer */}
+        <div className="h4 my-5">Waiting for someone to join ... </div>
+        <div>
+          <h4>
+            Countdown: {minutes} : {seconds}{' '}
+          </h4>
+        </div>
       </div>
     </>
   );
