@@ -40,4 +40,10 @@ export class GameController {
     console.log('user', user);
     return this.gameService.joinGame(user, id);
   }
+
+  @Get('/history')
+  async getUserGameHistory(@GetUser() user: User): Promise<Game[]> {
+    console.log('user', user);
+    return this.gameService.getUserGameHistory(user);
+  }
 }

@@ -97,6 +97,16 @@ export class GameService {
     }
   }
 
+  getUserGameHistory = async (user: User): Promise<Game[]> => {
+    const games = await this.gameRepository.find({
+      $or: [{ user2: user._id }, { user1: user._id }],
+      roundsCount: { $ne: 0 },
+    });
+
+    console.log('#### games', games);
+    return games;
+  };
+
   async joinGame(
     user: User,
     gameId: string,

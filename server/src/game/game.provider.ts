@@ -1,11 +1,14 @@
+import * as moment from 'moment-jalaali';
+
 import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Injectable, Logger } from '@nestjs/common';
 import Redis from 'ioredis';
 import { UserRepository } from 'src/user/user.repository';
 import { GameRepository } from './game.repository';
 import { Game } from './game.schema';
-import { Move } from '../types';
+import { Message, Move } from '../types';
 import { UserMoveDto } from './dto/usermove.dto';
+import { NewMessageDto } from './dto/newMessage.dto';
 
 @Injectable()
 export class GameProvider {
@@ -70,14 +73,6 @@ export class GameProvider {
     }
     return turn;
   }
-
-  // async getData(key: string) {
-  //   return this.redis.get(key);
-  // }
-
-  // async setData(key: string, value: string) {
-  //   return this.redis.set(key, value);
-  // }
 
   private checkGameStatus(moves: Move[]) {
     const xWins = this.winningPossibilities.some((posibility) => {
@@ -219,5 +214,32 @@ export class GameProvider {
     );
 
     this.logger.debug('#### updated user2', user2);
+  }
+
+  async handleNewMessage({
+    gameId,
+    username,
+    message,
+  }: NewMessageDto): Promise<Message> {
+    const formatedMessage = {
+      username,
+      message,
+      timestamp: moment().format('jYYYY/jM/jD HH:mm:ss'),
+    };
+    console.log('#### formatedmessage', formatedMessage);
+    let messages = [];
+    const messagesData = await this.redis.get(`messages-${gameId}`);
+    if (messagesData) {
+      messages = JSON.parse(messagesData);
+      console.log('#### messages', messages);
+    }
+    messages.push(formatedMessage);
+    await this.redis.set(`messages-${gameId}`, JSON.stringify(messages));
+    return formatedMessage;
+  }
+
+  async getMessagesHistory(gameId: string): Promise<Message[]> {
+    const messagesData = await this.redis.get(`messages-${gameId}`);
+    return JSON.parse(messagesData);
   }
 }

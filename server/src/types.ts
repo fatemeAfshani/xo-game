@@ -11,3 +11,9 @@ export type UserGameFinish = {
   winner: string;
   increaseScore: number;
 };
+
+export type Message = {
+  message: string;
+  username: string;
+  timestamp: string;
+};

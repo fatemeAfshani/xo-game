@@ -14,6 +14,7 @@ import { GameProvider } from './game.provider';
 import { Game } from './game.schema';
 import { UserMoveDto } from './dto/usermove.dto';
 import { JoinDataDto } from './dto/joindata.dto';
+import { NewMessageDto } from './dto/newMessage.dto';
 
 @WebSocketGateway({ namespace: 'playground', cors: {} })
 export class PlaygroundGateway
@@ -105,6 +106,10 @@ export class PlaygroundGateway
       const gameTurn = await this.gameProvider.getGameTurn(gameId);
       this.logger.debug('##### getting game turn', gameTurn);
       client.emit('gameTurn', gameTurn);
+
+      const messageHistory = await this.gameProvider.getMessagesHistory(gameId);
+      this.logger.debug('##### getting message history', messageHistory);
+      client.emit('messageHistory', messageHistory);
     }
   }
 
@@ -114,6 +119,7 @@ export class PlaygroundGateway
     @MessageBody() data: UserMoveDto,
   ): Promise<void> {
     const { changes, status, game } = await this.gameProvider.userMove(data);
+    this.playground.to(`room-${data.gameId}`).emit('randome', changes);
 
     this.playground.to(`room-${data.gameId}`).emit('changesForUser', changes);
     if (status) {
@@ -149,5 +155,17 @@ export class PlaygroundGateway
     client
       .to(`room-${gameId}`)
       .emit('otherUserDecision', { decision: 'finish' });
+  }
+
+  @SubscribeMessage('newMessage')
+  async handleNewMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() newMessage: NewMessageDto,
+  ): Promise<void> {
+    this.logger.debug('#### new message', newMessage);
+    const message = await this.gameProvider.handleNewMessage(newMessage);
+    this.playground
+      .to(`room-${newMessage.gameId}`)
+      .emit('sendMessage', message);
   }
 }

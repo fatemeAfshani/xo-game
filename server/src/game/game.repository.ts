@@ -91,7 +91,9 @@ export class GameRepository {
   async find(filterQuery: FilterQuery<Game>) {
     return this.gameModel
       .find(filterQuery, {}, { lean: true })
-      .populate('user1', '_id username score');
+      .limit(10)
+      .populate('user1', '_id username')
+      .populate('user2', '_id username');
   }
 
   async findOneAndDelete(filterQuery: FilterQuery<Game>) {
