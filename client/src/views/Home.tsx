@@ -270,9 +270,10 @@ export default function Home() {
               {historyGame?.length > 0 &&
                 historyGame?.map((game, index) => {
                   const user1IsMe = game.user1._id === user._id;
+                  const isDraw = game.user1Wins === game.user2Wins;
                   const amWinner = user1IsMe ? game.user1Wins > game.user2Wins : game.user2Wins > game.user1Wins;
                   return (
-                    <tr key={index} className={amWinner ? 'table-info' : 'table-danger'}>
+                    <tr key={index} className={isDraw ? 'table-warning' : amWinner ? 'table-info' : 'table-danger'}>
                       <td>{index + 1}</td>
                       <td>{user1IsMe ? game.user2.username : game.user1.username}</td>
                       <td> {game.roundsCount}</td>
