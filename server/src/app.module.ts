@@ -8,7 +8,6 @@ import { RedisModule } from '@liaoliaots/nestjs-redis';
 
 const { uri: mongoUri } = config.get('mongo');
 const { url: redisUrl } = config.get('redis');
-console.log('#### redis url', redisUrl);
 
 @Module({
   imports: [

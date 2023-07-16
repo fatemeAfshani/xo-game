@@ -3,7 +3,6 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-// import { Payload } from './jwt-payload.type';
 import { UserRepository } from 'src/user/user.repository';
 import { User } from 'src/user/user.schema';
 import { Payload } from './jwt-payload.type';

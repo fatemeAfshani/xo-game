@@ -35,7 +35,6 @@ export class UserController {
   @Get('/me')
   @UseGuards(AuthGuard())
   async getUser(@GetUser() user: User): Promise<User> {
-    console.log('#### user', user);
     return this.userService.getUser(user._id);
   }
 }

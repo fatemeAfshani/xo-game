@@ -22,8 +22,6 @@ export class GameRepository {
       _id: new Types.ObjectId(),
       user1: user,
     });
-
-    console.log('#### createdGame', createdGame);
     return (
       await (
         await createdGame.save(options)
@@ -57,40 +55,30 @@ export class GameRepository {
       this.logger.warn(`game not found with filterQuery:`, filterQuery);
       throw new NotFoundException('game not found.');
     } else if (game.roundsCount) return null;
-    console.log('### game', game);
     game.roundsCount = update.roundsCount;
     game.user1Wins = update.user1Wins;
     game.user2Wins = update.user2Wins;
     game.drawsCount = update.drawsCount;
 
     await game.save();
-    // const game = await this.gameModel.findOneAndUpdate(filterQuery, update, {
-    //   lean: true,
-    //   new: true,
-    // });
-
     return game;
   }
 
   async joinGame(filterQuery: FilterQuery<Game>, user: User): Promise<Game> {
     const game = await this.gameModel.findOne(filterQuery);
-    this.logger.debug('### before joining to game', game);
-
     if (!game) {
       this.logger.warn(`game not found with filterQuery:`, filterQuery);
       throw new NotFoundException('game not found.');
     }
     if (game.user2) throw new ConflictException('can not join to this game');
-
     game.user2 = user;
     await game.save();
-    this.logger.debug('##### after joining to game', game);
     return game;
   }
 
   async find(filterQuery: FilterQuery<Game>) {
     return this.gameModel
-      .find(filterQuery, {}, { lean: true })
+      .find(filterQuery, {}, { lean: true, sort: { _id: -1 } })
       .limit(10)
       .populate('user1', '_id username')
       .populate('user2', '_id username');

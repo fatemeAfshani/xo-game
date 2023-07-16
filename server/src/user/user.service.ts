@@ -66,7 +66,6 @@ export class UserService {
 
   async getUser(userId: Types.ObjectId): Promise<User> {
     const user = await this.userRepository.findOne({ _id: userId });
-    console.log('### user', user);
     delete user.password;
 
     return user;

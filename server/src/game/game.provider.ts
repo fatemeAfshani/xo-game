@@ -34,9 +34,7 @@ export class GameProvider {
   }
 
   async getGameData(gameId: string): Promise<Game> {
-    console.log('$#### gameid', gameId);
     let game;
-    // const gameData = null;
     const gameData = await this.redis.get(`game-${gameId}`);
     if (gameData) {
       game = JSON.parse(gameData);
@@ -45,26 +43,22 @@ export class GameProvider {
       const stringData = JSON.stringify(game);
       this.redis.set(`game-${gameId}`, stringData);
     }
-
     return game;
   }
 
   async getGameMoves(gameId: string): Promise<Move[]> {
     let moves: Move[] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-
     const movesData = await this.redis.get(`moves-${gameId}`);
     if (movesData) {
       moves = JSON.parse(movesData);
     } else {
       this.redis.set(`moves-${gameId}`, JSON.stringify(moves));
     }
-
     return moves;
   }
 
   async getGameTurn(gameId) {
     let turn = 'X';
-
     const turnData = await this.redis.get(`turn-${gameId}`);
     if (turnData) {
       turn = turnData;
@@ -101,19 +95,11 @@ export class GameProvider {
     status: string | null;
     game: Game | null;
   }> {
-    this.logger.debug('#### move data', gameId, turn, index);
     let moves: Move[] = [];
-
     const gameMoves = await this.redis.get(`moves-${gameId}`);
-
-    this.logger.debug('##### game moves', gameMoves);
     moves = JSON.parse(gameMoves);
-    this.logger.debug('##### moves', moves);
     moves[index] = turn;
-
     const { xWins, oWins, isDraw } = this.checkGameStatus(moves);
-
-    this.logger.debug('##### x wins , owins , is draw', xWins, oWins, isDraw);
     const newTurn = turn == 'X' ? 'O' : 'X';
     const changes = {
       moves,
@@ -121,18 +107,12 @@ export class GameProvider {
     };
 
     if (!xWins && !oWins && !isDraw) {
-      this.logger.debug('@@@@ no body wins continue game');
       await this.redis.set(`turn-${gameId}`, newTurn);
       await this.redis.set(`moves-${gameId}`, JSON.stringify(moves));
-      this.logger.debug('##### changes', changes);
-
       return { changes, status: null, game: null };
     } else {
       const gameData = await this.redis.get(`game-${gameId}`);
-
-      this.logger.debug('##### game data from redis', gameData);
       const game = JSON.parse(gameData) as Game;
-      this.logger.debug('##### game data', game);
       let status = '';
       game.roundsCount += 1;
 
@@ -146,9 +126,7 @@ export class GameProvider {
         game.drawsCount += 1;
         status = 'Draw';
       }
-      this.logger.debug('##### updated game data', game);
       await this.redis.set(`game-${gameId}`, JSON.stringify(game));
-
       return { changes, status, game };
     }
   }
@@ -168,14 +146,11 @@ export class GameProvider {
   async finishGame(gameId: string) {
     const gameData = await this.redis.get(`game-${gameId}`);
     const game: Game = JSON.parse(gameData);
-    this.logger.debug('#### finish game', game);
-
     const updatedGame = await this.gameRepository.finishGame(
       { _id: gameId },
       game,
     );
     if (!updatedGame) return;
-    this.logger.debug('##### database updated game', updatedGame);
     let isDraw = false;
     let winner;
     let user1IncreaseScore = 0;
@@ -192,8 +167,7 @@ export class GameProvider {
       winner = game.user2._id;
       user2IncreaseScroe = 10;
     }
-
-    const user1 = await this.userRepository.finishGame(
+    await this.userRepository.finishGame(
       { _id: game.user1._id },
       {
         isDraw,
@@ -201,10 +175,7 @@ export class GameProvider {
         increaseScore: user1IncreaseScore,
       },
     );
-
-    this.logger.debug('#### updated user1', user1);
-
-    const user2 = await this.userRepository.finishGame(
+    await this.userRepository.finishGame(
       { _id: game.user2._id },
       {
         isDraw,
@@ -212,8 +183,6 @@ export class GameProvider {
         increaseScore: user2IncreaseScroe,
       },
     );
-
-    this.logger.debug('#### updated user2', user2);
   }
 
   async handleNewMessage({
@@ -226,12 +195,10 @@ export class GameProvider {
       message,
       timestamp: moment().format('jYYYY/jM/jD HH:mm:ss'),
     };
-    console.log('#### formatedmessage', formatedMessage);
     let messages = [];
     const messagesData = await this.redis.get(`messages-${gameId}`);
     if (messagesData) {
       messages = JSON.parse(messagesData);
-      console.log('#### messages', messages);
     }
     messages.push(formatedMessage);
     await this.redis.set(`messages-${gameId}`, JSON.stringify(messages));
@@ -240,12 +207,14 @@ export class GameProvider {
 
   async getMessagesHistory(gameId: string): Promise<Message[]> {
     const messagesData = await this.redis.get(`messages-${gameId}`);
-    return JSON.parse(messagesData);
+    if (messagesData) {
+      return JSON.parse(messagesData);
+    }
+    return [];
   }
 
   async getOpenGameTtl(gameId: string): Promise<number> {
     const ttl = await this.redis.ttl(`open-game-${gameId}`);
-    console.log('###### game ttl', ttl);
     if (ttl > 0) {
       return ttl;
     }

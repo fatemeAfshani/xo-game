@@ -71,9 +71,6 @@ export class UserRepository {
   async finishGame(filterQuery: FilterQuery<User>, data: UserGameFinish) {
     const user = await this.userModel.findOne(filterQuery);
 
-    this.logger.debug('#### user', user);
-    this.logger.debug('#### data', data);
-
     user.score += data.increaseScore;
     if (data.isDraw) user.drawCount += 1;
     if (data.winner === user._id.toString()) {

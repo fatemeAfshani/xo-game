@@ -4,7 +4,7 @@
   },
   "jwt": {
     "secret": "sfsdfSFSF@#4wedf3SDF#WDSFSDG#sa12YRJ%^&#$$UFQWE#@%G@%^%",
-    "expire": 3600
+    "expire": 36000
   },
   "mongo": {
     "uri": "mongodb://localhost:27018/"

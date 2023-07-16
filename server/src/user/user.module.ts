@@ -18,7 +18,7 @@ const { expire, secret } = config.get('jwt');
     JwtModule.register({
       secret,
       signOptions: {
-        expiresIn: expire, //1hour
+        expiresIn: expire, //10hour
       },
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),

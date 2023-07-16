@@ -5,7 +5,6 @@ import { GameController } from './game.controller';
 import { GameRepository } from './game.repository';
 import { Game, GameSchema } from './game.schema';
 import { GameService } from './game.service';
-// import { WaitingGateway } from './gateways/waiting.gateway';
 import { PlaygroundGateway } from './playground.gateway';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { GameProvider } from './game.provider';
