@@ -239,7 +239,7 @@ export default function PlayGround() {
           </div>
         )}
         <div className={boardClassName.toString()}>
-          {cells?.map((cell, index) => {
+          {cells?.map((_cell, index) => {
             return <Cell key={index} id={index} className={cellClassNames[index]} />;
           })}
         </div>
